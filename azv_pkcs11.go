@@ -211,35 +211,53 @@ func AzvSign_RSA_PKCS(data *byte, dataLen C.size_t, sigLen *C.size_t) unsafe.Poi
 		return nil
 	}
 
-	var dataBytes []byte
-
 	println("AzvSign_RSA_PKCS: dataLen:", dataLen)
 
-	if dataLen != 32 && dataLen != 64 {
-		//perform ASN1 decode
-		var s EncryptedPrivateKeyInfo
-		_, err := asn1.Unmarshal(C.GoBytes(unsafe.Pointer(data), C.int(dataLen)), &s)
+	rawBytes := C.GoBytes(unsafe.Pointer(data), C.int(dataLen))
+
+	// The incoming data may be one of several formats:
+	// 1. raw SHA256/512 digest (32 or 64 bytes)
+	// 2. ASN.1 DigestInfo structure produced by OpenSSL engine (e.g. 51 bytes for SHA256)
+	// 3. Arbitrary data that must be hashed before signing
+
+	// helper to sign an already-computed digest
+	signDigest := func(d []byte) unsafe.Pointer {
+		sig, err := signer.Sign(rand.Reader, d, nil)
 		if err != nil {
-			println("Failed to unmarshal data: " + err.Error())
+			println("Failed to sign data: " + err.Error())
 			return nil
 		}
-		if logMode == "1" {
-			println("Unmarshalled EncryptedPrivateKeyInfo:")
-			fmt.Printf("Algorithm: %s\n", s.ENCRYPTIONALGORITHM.ALGORITHM.String())
-			fmt.Printf("Encrypted Data: %x\n", s.ENCRYPTEDDATA)
-			println("Encrypted Data Length: ", len(s.ENCRYPTEDDATA))
-		}
-		if len(s.ENCRYPTEDDATA) != 32 && len(s.ENCRYPTEDDATA) != 64 {
-			println("Encrypted data length is not 32 or 64 bytes")
-			return nil
-		}
-		dataBytes = s.ENCRYPTEDDATA
-	} else {
-		dataBytes = C.GoBytes(unsafe.Pointer(data), C.int(dataLen))
+		*sigLen = C.size_t(len(sig))
+		return setReturnByte(C.CBytes(sig))
 	}
 
-	//signature, err := signer.PkcsSign(dataBytes, "RSA")
-	signature, err := signer.Sign(rand.Reader, dataBytes, nil)
+	// case 1: raw digest lengths
+	if dataLen == 32 || dataLen == 64 {
+		println("Signing raw digest")
+		return signDigest(rawBytes)
+	}
+
+	// case 2: attempt ASN.1 DigestInfo
+	if dataLen > 2 && rawBytes[0] == 0x30 {
+		var di asn1.RawValue
+		if _, err := asn1.Unmarshal(rawBytes, &di); err == nil && di.Tag == 16 {
+			// di.Bytes holds the inner sequence
+			var inner asn1.RawValue
+			if _, err2 := asn1.Unmarshal(di.Bytes, &inner); err2 == nil && inner.Tag == 4 {
+				println("Extracted digest from DigestInfo")
+				return signDigest(inner.Bytes)
+			}
+		}
+		// fallback: if trailing 32/64 bytes present, treat as digest
+		if int(dataLen) > 32 {
+			println("Fallback: using trailing bytes as digest")
+			return signDigest(rawBytes[dataLen-32:])
+		}
+	}
+
+	// case 3: any other data – hash then sign
+	println("Received %d bytes of data, hashing with SHA256\n", dataLen)
+	signature, err := signer.DigestAndSign(rawBytes, "SHA256", "RSA")
 	if err != nil {
 		println("Failed to sign data: " + err.Error())
 		return nil

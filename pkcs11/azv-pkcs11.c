@@ -804,9 +804,10 @@ CK_DEFINE_FUNCTION(CK_RV, C_GetAttributeValue)(CK_SESSION_HANDLE hSession, CK_OB
 				//memcpy(pTemplate->pValue, expData, pTemplate->ulValueLen);
 				for (int i = 0; i < (int)byteLen; i++) {
 					((CK_BYTE*)pTemplate->pValue)[i] = expData[i];
-					printf("%02x:", ((CK_BYTE*)pTemplate->pValue)[i]);
+					AzvLog((char*)&((CK_BYTE*)pTemplate->pValue)[i]);
+					// printf("%02x:", ((CK_BYTE*)pTemplate->pValue)[i]);
 				}
-				printf("\n");
+				AzvLog("\n");
 				break;
 			case CKA_MODULUS:
 				AzvLog("C_GetAttributeValue type: CKA_MODULUS");
@@ -829,9 +830,10 @@ CK_DEFINE_FUNCTION(CK_RV, C_GetAttributeValue)(CK_SESSION_HANDLE hSession, CK_OB
 				//memcpy(pTemplate->pValue, modData, pTemplate->ulValueLen);
 				for (int i = 0; i < (int)byteLen; i++) {
 					((CK_BYTE*)pTemplate->pValue)[i] = modData[i];
-					printf("%02x:", ((CK_BYTE*)pTemplate->pValue)[i]);
+					AzvLog((char*)&((CK_BYTE*)pTemplate->pValue)[i]);
+					// printf("%02x:", ((CK_BYTE*)pTemplate->pValue)[i]);
 				}
-				printf("\n");
+				AzvLog("\n");
 				break;
 			case CKA_LABEL:
 				AzvLog("C_GetAttributeValue type: CKA_LABEL");
@@ -851,7 +853,8 @@ CK_DEFINE_FUNCTION(CK_RV, C_GetAttributeValue)(CK_SESSION_HANDLE hSession, CK_OB
 				//memcpy(pTemplate->pValue, modData, pTemplate->ulValueLen);
 				for (int i = 0; i < (int)byteLen; i++) {
 					((CK_BYTE*)pTemplate->pValue)[i] = keyName[i];
-					printf("%02x:", ((CK_BYTE*)pTemplate->pValue)[i]);
+					AzvLog((char*)&((CK_BYTE*)pTemplate->pValue)[i]);
+					// printf("%02x:", ((CK_BYTE*)pTemplate->pValue)[i]);
 				}
 				/*
 				((CK_BYTE*)pTemplate->pValue)[byteLen-5] = '-';
@@ -865,7 +868,7 @@ CK_DEFINE_FUNCTION(CK_RV, C_GetAttributeValue)(CK_SESSION_HANDLE hSession, CK_OB
 					((CK_BYTE*)pTemplate->pValue)[byteLen-2] = 'y';
 				}
 				((CK_BYTE*)pTemplate->pValue)[byteLen-1] = '\0';
-				printf("\n");
+				// AzvLog("\n")
 				pTemplate->ulValueLen = 0;
 				*/
 				break;
@@ -898,9 +901,10 @@ CK_DEFINE_FUNCTION(CK_RV, C_GetAttributeValue)(CK_SESSION_HANDLE hSession, CK_OB
 					}
 					for (int i = 0; i < (int)byteLen; i++) {
 						((CK_BYTE*)pTemplate->pValue)[i] = certId[i];
-						printf("%02x:", ((CK_BYTE*)pTemplate->pValue)[i]);
+						AzvLog((char*)&((CK_BYTE*)pTemplate->pValue)[i]);
+						// printf("%02x:", ((CK_BYTE*)pTemplate->pValue)[i]);
 					}
-					printf("\n");
+					AzvLog("\n");
 				}
 				if (hObject == MY_PRIVATE_KEY_HANDLE)
 				{
@@ -927,9 +931,10 @@ CK_DEFINE_FUNCTION(CK_RV, C_GetAttributeValue)(CK_SESSION_HANDLE hSession, CK_OB
 						idData[3] = (CK_BYTE)(index & 0xFF);
 						for (int i = 0; i < (int)byteLen; i++) {
 							((CK_BYTE*)pTemplate->pValue)[i] = idData[i];
-							printf("%02x:", ((CK_BYTE*)pTemplate->pValue)[i]);
+							AzvLog((char*)&((CK_BYTE*)pTemplate->pValue)[i]);
+							// printf("%02x:", ((CK_BYTE*)pTemplate->pValue)[i]);
 						}
-						printf("\n");
+						AzvLog("\n");
 					}
 				}
 				break;
@@ -956,9 +961,10 @@ CK_DEFINE_FUNCTION(CK_RV, C_GetAttributeValue)(CK_SESSION_HANDLE hSession, CK_OB
 					}
 					for (int i = 0; i < (int)byteLen; i++) {
 						((CK_BYTE*)pTemplate->pValue)[i] = certData[i];
-						printf("%02x:", ((CK_BYTE*)pTemplate->pValue)[i]);
+						AzvLog((char*)&((CK_BYTE*)pTemplate->pValue)[i]);
+						// printf("%02x:", ((CK_BYTE*)pTemplate->pValue)[i]);
 					}
-					printf("\n");
+					AzvLog("\n");
 				} else {
 					AzvLog("C_GetAttributeValue CKA_VALUE called with unknown handle");
 					return CKR_OBJECT_HANDLE_INVALID;
@@ -1356,9 +1362,10 @@ CK_DEFINE_FUNCTION(CK_RV, C_Sign)(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
 	}
 
 	for (int i = 0; i < (int)ulDataLen; i++) {
-		printf("%02x", pData[i]);
+		AzvLog((char*)&pData[i]);
+		// printf("%02x", pData[i]);
 	}
-	printf("\n");
+	AzvLog("\n");
 
 	if (*pulSignatureLen == gSignLength) {
 
